@@ -81,4 +81,17 @@ func TestHeaders(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, 0, n)
 	assert.False(t, done)
+
+	// Multi Value field name
+
+	headers = NewHeaders()
+	data = []byte("user: localhost:42069\r\n\r\n")
+	_, done, err = headers.Parse(data)
+	require.NoError(t, err)
+	assert.False(t, done)
+	data = []byte("user: localhost:42068\r\n\r\n")
+	_, done, err = headers.Parse(data)
+	require.NoError(t, err)
+	assert.False(t, done)
+	assert.Equal(t, "localhost:42069,localhost:42068", headers["user"])
 }

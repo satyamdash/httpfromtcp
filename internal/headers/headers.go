@@ -51,6 +51,10 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	}
 	key_val[1] = strings.TrimSpace(key_val[1])
 	key_val[0] = strings.ToLower(key_val[0])
-	h[key_val[0]] = key_val[1]
+	if val, ok := h[key_val[0]]; ok && val != "" {
+		h[key_val[0]] = val + "," + key_val[1]
+	} else {
+		h[key_val[0]] = key_val[1]
+	}
 	return idx + len(CRLF), false, nil
 }
