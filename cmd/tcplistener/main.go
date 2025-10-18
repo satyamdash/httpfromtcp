@@ -72,5 +72,8 @@ func main() {
 		for key, val := range r.Headers {
 			fmt.Printf("- %s: %s\n", key, val)
 		}
+
+		fmt.Println("Body:")
+		fmt.Printf("%s\n", r.Body)
 	}
 }

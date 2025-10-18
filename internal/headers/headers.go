@@ -29,6 +29,14 @@ const CRLF = "\r\n"
 
 type Headers map[string]string
 
+func (h Headers) Get(key string) (string, error) {
+	val, ok := h[key]
+	if !ok {
+		return "", fmt.Errorf("not found")
+	}
+	return val, nil
+}
+
 func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	converted_str := string(data)
 	idx := strings.Index(converted_str, CRLF)
@@ -37,11 +45,14 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	case -1:
 		return 0, false, nil
 	case 0:
-		return len(converted_str), true, nil
+		return len(CRLF), true, nil
 	default:
 		converted_str = converted_str[:idx]
 	}
 	converted_str = strings.TrimSpace(converted_str)
+	if converted_str == "" {
+		return idx + len(CRLF), true, nil // ✅ empty line = end of headers
+	}
 
 	key_val := strings.SplitN(converted_str, ":", 2)
 	if len(key_val) < 2 {
