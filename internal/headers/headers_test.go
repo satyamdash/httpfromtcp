@@ -7,12 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Test: Valid single header
-
-func NewHeaders() Headers {
-	return make(Headers)
-}
-
 func TestHeaders(t *testing.T) {
 	headers := NewHeaders()
 	data := []byte("Host: localhost:42069\r\n\r\n")

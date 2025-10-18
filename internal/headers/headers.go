@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+func NewHeaders() Headers {
+	return make(Headers)
+}
+
 func ValidateKey(key string) bool {
 	//	Uppercase letters: A-Z
 	//
