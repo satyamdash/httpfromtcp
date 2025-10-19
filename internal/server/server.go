@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/satyamdash/httpfromtcp/internal/request"
+	"github.com/satyamdash/httpfromtcp/internal/response"
 )
 
 type ServerState int
@@ -55,14 +56,8 @@ func (s *Server) handle(conn net.Conn) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	resp := "HTTP/1.1 200 OK\r\n" +
-		"Content-Type: text/plain\r\n" +
-		"Content-Length: 13\r\n" +
-		"\r\n" +
-		"Hello World!"
-	if _, err := conn.Write([]byte(resp)); err != nil {
-		fmt.Println(err)
-	}
+
+	response.WriteHeaders(conn, response.GetDefaultHeaders(0))
 
 	// fmt.Println("Request line:")
 	// fmt.Printf("- Method: %s\n", r.RequestLine.Method)
