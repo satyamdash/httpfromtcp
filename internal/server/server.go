@@ -15,6 +15,13 @@ type Bool struct {
 	// contains filtered or unexported fields
 }
 
+type HandlerError struct {
+	StatusCode int
+	Message    string
+}
+
+type Handler func(w *response.Writer, req *request.Request)
+
 const (
 	Listening ServerState = iota
 	Closed
@@ -22,18 +29,31 @@ const (
 
 type Server struct {
 	listener net.Listener
+	handler  Handler
 }
 
-func Serve(port int) (*Server, error) {
+func Serve(port int, handler Handler) (*Server, error) {
 	ln, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
 		return nil, err
 	}
-	return &Server{listener: ln}, nil
+	return &Server{listener: ln,
+		handler: handler}, nil
 }
 
 func (s *Server) Close() error {
 	return s.listener.Close()
+}
+
+func (s *Server) WriteError(w *response.Writer, err *HandlerError) {
+	w.WriteStatusLine(response.StatusCode(err.StatusCode))
+
+	// Write headers
+	headers := response.GetDefaultHeaders(len(err.Message))
+	w.WriteHeaders(headers)
+
+	// Write body
+	w.WriteBody([]byte(err.Message))
 }
 
 func (s *Server) Listen() {
@@ -51,26 +71,11 @@ func (s *Server) Listen() {
 
 func (s *Server) handle(conn net.Conn) {
 	defer conn.Close()
-	_, err := request.RequestFromReader(conn)
-
+	r, err := request.RequestFromReader(conn)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Failed to parse request:", err)
+		return
 	}
-
-	response.WriteHeaders(conn, response.GetDefaultHeaders(0))
-
-	// fmt.Println("Request line:")
-	// fmt.Printf("- Method: %s\n", r.RequestLine.Method)
-	// fmt.Printf("- Target: %s\n", r.RequestLine.RequestTarget)
-	// fmt.Printf("- Version: %s\n", r.RequestLine.HttpVersion)
-
-	// fmt.Println("Headers:")
-
-	// for key, val := range r.Headers {
-	// 	fmt.Printf("- %s: %s\n", key, val)
-	// }
-
-	// fmt.Println("Body:")
-	// fmt.Printf("%s\n", r.Body)
-
+	rw := response.NewWriter(conn)
+	s.handler(rw, r)
 }
