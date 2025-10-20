@@ -20,6 +20,21 @@ import (
 const port = 42069
 
 func handler(w *response.Writer, req *request.Request) {
+	if req.RequestLine.Method == "GET" {
+		if req.RequestLine.RequestTarget == "/video" {
+			h := headers.NewHeaders()
+
+			bytes, err := os.ReadFile("assets/vim.mp4")
+			if err != nil {
+				fmt.Println("error reading file")
+			}
+			w.WriteStatusLine(response.StatusOK)
+			h["Content-Type"] = "video/mp4"
+			h["Content-Length"] = fmt.Sprintf("%d", len(bytes))
+			w.WriteHeaders(h)
+			w.WriteBody(bytes)
+		}
+	}
 	switch req.RequestLine.RequestTarget {
 	case "/yourproblem":
 		w.WriteStatusLine(response.StatusBadRequest)
