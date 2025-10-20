@@ -63,3 +63,36 @@ func GetDefaultHeaders(contentLen int) headers.Headers {
 
 	return h
 }
+
+func (w *Writer) WriteChunkedBody(p []byte) (int, error) {
+	sizeLine := fmt.Sprintf("%x\r\n", len(p))
+	if _, err := w.Write.Write([]byte(sizeLine)); err != nil {
+		return 0, err
+	}
+
+	// Write the actual chunk data
+	if _, err := w.Write.Write(p); err != nil {
+		return 0, err
+	}
+
+	// Write the trailing CRLF after the chunk
+	if _, err := w.Write.Write([]byte("\r\n")); err != nil {
+		return 0, err
+	}
+
+	return len(p), nil
+}
+
+func (w *Writer) WriteChunkedBodyDone() (int, error) {
+	return w.Write.Write([]byte("0\r\n"))
+}
+
+func (w *Writer) WriteTrailers(h headers.Headers) error {
+	for k, v := range h {
+		if _, err := w.Write.Write([]byte(fmt.Sprintf("%s: %s\r\n", k, v))); err != nil {
+			return err
+		}
+	}
+	_, err := w.Write.Write([]byte("\r\n"))
+	return err
+}
